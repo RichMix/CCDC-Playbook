@@ -11,6 +11,8 @@ you're scored on.
 |------|------------|
 | [`scripts/harden-linux.sh`](scripts/harden-linux.sh) | **Portable** hardening + persistence-hunt script. Auto-detects RHEL / Debian / Arch family and swaps package manager, firewall, MAC layer, and web paths. Start here. |
 | [`scripts/harden-ecom.sh`](scripts/harden-ecom.sh) | Rocky 9 "Ecom" web/DB box — same logic, pre-tuned to that role. |
+| [`scripts/packet-filter.sh`](scripts/packet-filter.sh) | **Dedicated stateful firewall** (nftables, iptables fallback). Default-deny both ways, conntrack, anti-spoof, rate-limited SYN/ICMP, log-drop. `--test` mode auto-rolls-back so you can't lock yourself out. |
+| [`scripts/fim.sh`](scripts/fim.sh) | **File-integrity monitor.** Baselines a whitelist of known-good hashes and alerts on anything ADDED / CHANGED / REMOVED outside it. Runs as a 5-min systemd timer → syslog. |
 | [`scripts/README.md`](scripts/README.md) | Full runbook: every flag, what each step changes, and the gotchas. |
 
 ## Quick start
@@ -51,6 +53,8 @@ reference and the two spots most likely to need tuning after `--apply` (the PHP
 
 - [x] Portable host-hardening + persistence-hunt script
 - [x] Rocky 9 Ecom-specific profile
+- [x] Standalone stateful packet filter with lockout-safe `--test` rollback
+- [x] File-integrity monitor (whitelist baseline → drift alerts to syslog)
 - [ ] Per-role profiles (DNS/mail, AD-join, database) sharing one core library
-- [ ] Central log collector so the whole team sees tripwire hits in one place
+- [ ] Central log collector so the whole team sees tripwire + FIM hits in one place
 - [ ] Decoy / honeypot and diversion layer
