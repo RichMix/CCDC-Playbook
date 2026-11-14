@@ -14,6 +14,8 @@ use the [audit and retirement guide](../guides/retire-unneeded-jobs-services-por
 | [`harden-linux.sh`](harden-linux.sh) | Portable persistence hunt and broad hardening for other Linux hosts. Generic `--apply` requires `--ack-generic-apply` after host-specific review. |
 | [`packet-filter.sh`](packet-filter.sh) | Standalone stateful firewall (nftables/iptables). Prints the ruleset by default; `--test` applies with an automatic rollback so a bad rule can't lock you out. Required inbound services and ICMP echo stay open; egress clamp and default-deny are the applied modes, not the dry-run. |
 | [`fim.sh`](fim.sh) | File-integrity monitor. Baselines known-good hashes and reports additions, changes, and removals outside an ignore-list. Detection only — it changes nothing — and installs as a systemd timer that logs drift to syslog. |
+| [`runbook-watch.sh`](runbook-watch.sh) | Read-only watch snapshot for a Linux host (`ecom`, `email`, `splunk` or `workstation`): people, listeners, outbound web connections, disk, admin groups, logging and the role's services. Writes a mode-600 TSV under `/root/ccdc-watch/` and can diff against an earlier one with `--baseline`. Changes nothing. |
+| [`runbook-watch.ps1`](runbook-watch.ps1) | The same for Windows (`-Role AD`, `MSSQL` or `Wkst`): sessions, listeners, admins, non-Microsoft tasks, firewall, Defender, the Splunk forwarder and role services. Writes JSON under `%LOCALAPPDATA%\CCDC\Reports` and can diff with `-BaselinePath`. Changes nothing. |
 
 ## What changed from Claude's original draft
 
@@ -117,3 +119,20 @@ Syntax validation does not prove firewalld policy behavior or application
 compatibility. Run inventory and staged apply on a representative Rocky 9 lab
 image, then verify SSH, web content, ping, store transactions, dependencies,
 and rollback before live use.
+
+## Watch snapshots
+
+Run one on the host itself, with that host's role. Neither script reaches another machine, changes a setting or sends anything anywhere.
+
+```bash
+sudo bash scripts/runbook-watch.sh ecom
+# Later rounds: compare with a known-good snapshot from the same host and role
+sudo bash scripts/runbook-watch.sh ecom --baseline /root/ccdc-watch/HOST-ecom-YYYYMMDDTHHMMSSZ.tsv
+```
+
+```powershell
+.\scripts\runbook-watch.ps1 -Role AD
+.\scripts\runbook-watch.ps1 -Role AD -BaselinePath 'C:\Users\YOU\AppData\Local\CCDC\Reports\HOST-AD-YYYYMMDDTHHMMSSZ.json'
+```
+
+`unavailable` (Linux) or a read error (Windows) means a command failed: it is not a pass. The diff isn't filtered, so normal logins and service changes show up too; a new listener, account or task is a lead, not proof. The snapshots hold account names and addresses, so keep them on the host.
